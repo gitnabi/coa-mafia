@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package player_info;
+
+option go_package = "mafia/pkg/proto/player_info";
+
+enum Role {
+    TOWNIE = 0;
+    COMMISSIONER = 1;
+    MAFIA = 2;
+    KILLED = 3;
+}
+
+message PlayerInfo {
+    Role role = 1;
+    string name = 2;
+    string uuid = 3;
+    uint64 session_id = 4;
+}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "pkg/proto/action/action.proto";
+import "pkg/proto/notification/notification.proto";
+
+package mafia_service;
+
+option go_package = "mafia/pkg/proto/mafia_service";
+
+service Mafia {
+    rpc ExecuteAction(stream action.Action) returns (stream notification.Notification);
+}

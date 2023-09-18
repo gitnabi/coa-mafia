@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+import "pkg/proto/player_info/player_info.proto";
+
+package notification;
+
+option go_package = "mafia/pkg/proto/notification";
+
+message ConnectionNewPlayerNotification {
+    player_info.PlayerInfo player = 1;
+}
+
+message StartGameNotification {
+    player_info.PlayerInfo player = 1;
+}
+
+message WakeNotification {
+    repeated player_info.PlayerInfo remaining = 1;
+    optional player_info.PlayerInfo killed_player = 2;
+}
+
+message VotingNotification {
+    player_info.PlayerInfo voter = 1;
+    player_info.PlayerInfo candidate = 2;
+}
+
+message VotingResultNotification {
+    optional player_info.PlayerInfo executed_player = 1;
+}
+
+message RolePublicationNotification {
+    player_info.PlayerInfo player = 1;
+}
+
+message ReceiveMessageNotification {
+    player_info.PlayerInfo sender = 1;
+    string message = 2;
+}
+
+message FinishNotification {
+    bool has_mafia_won = 1;
+}
+
+enum NotificationType {
+    CONNECTION_NEW_PLAYER = 0;
+    START_GAME = 2;
+    WAKE = 3;
+    VOTING = 4;
+    VOTING_RESULT = 5;
+    ROLE_PUBLICATION = 6;
+    RECEIVE_MESSAGE = 7;
+    FINISH = 8;
+}
+
+message Notification {
+    oneof notifications {
+        ConnectionNewPlayerNotification connection_new_player_notification = 1;
+        StartGameNotification start_game_notification = 3;
+        WakeNotification wake_notification = 4;
+        VotingNotification voting_notification = 5;
+        VotingResultNotification voting_result_notification = 6;
+        RolePublicationNotification role_publication_notification = 7;
+        ReceiveMessageNotification receive_message_notification = 8;
+        FinishNotification finish_notification = 9;
+    }
+    NotificationType type = 10;
+}

@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+import "pkg/proto/player_info/player_info.proto";
+
+package action;
+
+option go_package = "mafia/pkg/proto/action";
+
+message InitAction {
+    player_info.PlayerInfo player = 1;
+}
+
+message VoteAction {
+    player_info.PlayerInfo player = 1;
+}
+
+message CheckRoleAction {
+    player_info.PlayerInfo player = 1;
+}
+
+message PublishRoleAction {
+    player_info.PlayerInfo player = 1;
+}
+
+message KillAction {
+    player_info.PlayerInfo player = 1;
+}
+
+message SendMessageAction {
+    string message = 1;
+}
+
+message GoToSleepAction {}
+
+enum ActionType {
+    INIT = 0;
+    VOTE = 1;
+    CHECK_ROLE = 2;
+    PUBLISH_ROLE = 3;
+    KILL = 4;
+    SEND_MESSAGE = 5;
+    GO_TO_SLEEP = 6;
+    DISCONNECT = 7;
+}
+
+message Action {
+    ActionType type = 1;
+    oneof actions {
+        InitAction init_action = 2;
+        VoteAction vote_action = 3;
+        CheckRoleAction check_action = 4;
+        PublishRoleAction publish_role_action = 5;
+        KillAction kill_action = 6;
+        SendMessageAction send_message_action = 7;
+        GoToSleepAction go_to_sleep_action = 8;
+    }
+}
