@@ -19,5 +19,5 @@ func (role *Role) ToString() string {
 }
 
 func (player_info *PlayerInfo) ToString() string {
-	return fmt.Sprintf("[name=\"%s\"; uuid=%s; session_id=%d]", player_info.Name, player_info.Uuid, player_info.SessionId)
+	return fmt.Sprintf("[name=\"%s\"; uuid=%s; session_id=%s]", player_info.Name, player_info.Uuid, player_info.SessionId)
 }

@@ -1,9 +1,10 @@
 module mafia
 
-go 1.21.1
+go 1.21
 
 require (
-	google.golang.org/grpc v1.58.0
+	github.com/rabbitmq/amqp091-go v1.8.1
+	google.golang.org/grpc v1.58.1
 	google.golang.org/protobuf v1.31.0
 )
 

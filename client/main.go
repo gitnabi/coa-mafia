@@ -5,11 +5,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	messanger_pkg "mafia/messanger"
 	action_pkg "mafia/pkg/proto/action"
 	service_pkg "mafia/pkg/proto/mafia_service"
 	notification_pkg "mafia/pkg/proto/notification"
 	player_info_pkg "mafia/pkg/proto/player_info"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"google.golang.org/grpc"
 )
@@ -23,6 +26,7 @@ const (
 	CHECK_ROLE   ActionType = 4
 	PUBLISH_ROLE ActionType = 5
 	KILL_PLAYER  ActionType = 6
+	DISCONNECT   ActionType = 7
 )
 
 type client struct {
@@ -32,6 +36,8 @@ type client struct {
 	player_info    *player_info_pkg.PlayerInfo
 	ctx            context.Context
 	checked_player *player_info_pkg.PlayerInfo
+	initialized    bool
+	messanger      *messanger_pkg.Messanger
 }
 
 func (c *client) InitAndRun(port string) {
@@ -52,18 +58,24 @@ func (c *client) InitAndRun(port string) {
 	}
 	fmt.Println("Стрим успешно создан...")
 
+	c.initialized = false
+	go c.SystemNotificationHandler()
+
 	fmt.Print("Введите свое имя: ")
 	reader := bufio.NewReader(os.Stdin)
 	name, err := reader.ReadString('\n')
 
 	c.player_info = &player_info_pkg.PlayerInfo{
+		Role: player_info_pkg.Role_KILLED,
 		Name: name[:len(name)-1],
 	}
+	c.messanger = &messanger_pkg.Messanger{}
 }
 
 func (c *client) Close() {
 	c.conn.Close()
 	c.stream.CloseSend()
+	c.messanger.Close()
 }
 
 func (c *client) sendАction(action *action_pkg.Action) {
@@ -93,6 +105,7 @@ func (c *client) PreparingForGame() {
 		},
 	}
 	c.sendАction(&action)
+	c.initialized = true
 
 	var notification *notification_pkg.Notification
 	for {
@@ -102,9 +115,12 @@ func (c *client) PreparingForGame() {
 			fmt.Printf("Подключился новый игрок! %s\n", notification.GetConnectionNewPlayerNotification().Player.ToString())
 		case notification_pkg.NotificationType_START_GAME:
 			fmt.Println("------------------------")
-			fmt.Println("\t\tИгра начинается")
+			fmt.Println("*\tИгра начинается\t*")
 			c.player_info = notification.GetStartGameNotification().GetPlayer()
 			fmt.Printf("Ваша роль: %s\n", c.player_info.Role.ToString())
+
+			c.messanger.Init(c.player_info)
+			go c.messanger.ReceiveMsgs()
 			return
 		default:
 			log.Fatalf("Получено неизвестное уведомление!")
@@ -177,9 +193,6 @@ func (c *client) ListenNotifications(ch chan *notification_pkg.Notification) {
 			break
 		}
 		switch notification.Type {
-		case notification_pkg.NotificationType_RECEIVE_MESSAGE:
-			receive_message_notification := notification.GetReceiveMessageNotification()
-			fmt.Printf("От %s получено следующее сообщение: %s", receive_message_notification.Sender.ToString(), receive_message_notification.Message)
 		case notification_pkg.NotificationType_VOTING:
 			voter := notification.GetVotingNotification().GetVoter()
 			candidate := notification.GetVotingNotification().GetCandidate()
@@ -248,16 +261,13 @@ func (c *client) GameDay(available_actions []ActionType, wake_notification *noti
 			if err != nil {
 				log.Fatalf("err read string: %s", err)
 			}
+			message = message[:len(message)-1]
 
-			action := action_pkg.Action{
-				Type: action_pkg.ActionType_SEND_MESSAGE,
-				Actions: &action_pkg.Action_SendMessageAction{
-					SendMessageAction: &action_pkg.SendMessageAction{
-						Message: message,
-					},
-				},
+			chatMsg := &messanger_pkg.ChatMessage{
+				PlayerInfo: c.player_info,
+				Msg:        message,
 			}
-			c.sendАction(&action)
+			c.messanger.SendMsg(chatMsg)
 
 		case VOTE:
 			selected := c.selectPlayer(c.player_info, wake_notification.Remaining)
@@ -345,6 +355,34 @@ func (c *client) WaitNotification(ch chan *notification_pkg.Notification) *notif
 		log.Fatalf("Получено неожиданное уведомление! %s\n", notification.Type.String())
 	}
 	return notification.GetWakeNotification()
+}
+
+func (c *client) SystemNotificationHandler() {
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigs
+		done <- true
+	}()
+	<-done
+
+	if c.initialized {
+		action := action_pkg.Action{
+			Type: action_pkg.ActionType_DISCONNECT,
+			Actions: &action_pkg.Action_DisconnnectAction{
+				DisconnnectAction: &action_pkg.DisconnectAction{
+					Player: c.player_info,
+				},
+			},
+		}
+		c.sendАction(&action)
+	}
+	fmt.Println("\nВы покидаете игру!")
+	fmt.Printf("------------------------")
+	os.Exit(1)
 }
 
 func main() {

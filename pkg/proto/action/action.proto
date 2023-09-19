@@ -26,11 +26,11 @@ message KillAction {
     player_info.PlayerInfo player = 1;
 }
 
-message SendMessageAction {
-    string message = 1;
-}
-
 message GoToSleepAction {}
+
+message DisconnectAction {
+    player_info.PlayerInfo player = 1;
+}
 
 enum ActionType {
     INIT = 0;
@@ -51,7 +51,7 @@ message Action {
         CheckRoleAction check_action = 4;
         PublishRoleAction publish_role_action = 5;
         KillAction kill_action = 6;
-        SendMessageAction send_message_action = 7;
-        GoToSleepAction go_to_sleep_action = 8;
+        GoToSleepAction go_to_sleep_action = 7;
+        DisconnectAction disconnnect_action = 8;
     }
 }

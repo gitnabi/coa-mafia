@@ -32,11 +32,6 @@ message RolePublicationNotification {
     player_info.PlayerInfo player = 1;
 }
 
-message ReceiveMessageNotification {
-    player_info.PlayerInfo sender = 1;
-    string message = 2;
-}
-
 message FinishNotification {
     bool has_mafia_won = 1;
 }
@@ -48,7 +43,6 @@ enum NotificationType {
     VOTING = 4;
     VOTING_RESULT = 5;
     ROLE_PUBLICATION = 6;
-    RECEIVE_MESSAGE = 7;
     FINISH = 8;
 }
 
@@ -60,7 +54,6 @@ message Notification {
         VotingNotification voting_notification = 5;
         VotingResultNotification voting_result_notification = 6;
         RolePublicationNotification role_publication_notification = 7;
-        ReceiveMessageNotification receive_message_notification = 8;
         FinishNotification finish_notification = 9;
     }
     NotificationType type = 10;

@@ -2,7 +2,15 @@ version: "3"
 
 services:
   mafia-server:
-    build: ./server
+    build: ./
     restart: always
     ports:
       - 9000:9000
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:management
+    hostname: "rabbitmq"
+    ports:
+      - "15672:15672"
+      - "5672:5672"

@@ -15,5 +15,6 @@ message PlayerInfo {
     Role role = 1;
     string name = 2;
     string uuid = 3;
-    uint64 session_id = 4;
+    string session_id = 4;
+    bool asleep = 5;
 }
